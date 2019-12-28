@@ -20,15 +20,16 @@ public class MainActivity extends AppCompatActivity {
     private int[][] map;
     private int meX;
     private int meY;
-    final String background = "#998BC34A";
+    final String background = "#998BC3";
     List<TextView> textViews = new ArrayList<>();
-    TextView me;
+    TextView me, up_available;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         me = (TextView) findViewById(R.id.text_me);
+        up_available = (TextView) findViewById(R.id.up_available);
         Button newMap = (Button) findViewById(R.id.btn_newmap);
         newMap.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -36,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
                 createMap();
                 randomMe();
                 //printMap();
+                checkAvailableMoves();
+
             }
         });
 
@@ -65,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         createMap();
         randomMe();
 //printMap();
+        checkAvailableMoves();
     }
 
 
@@ -88,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         map[meY][meX] = 0;
         String origiLine = textViews.get(meY).getText().toString();
         textViews.get(meY).setText(Html.fromHtml(
-                origiLine.substring(0, meX).concat("<span style=\"background-color:#000000;\"><font color=#ffffff>").concat("0").concat("</font></span>").concat(origiLine.substring(meX + 1))
+                origiLine.substring(0, meX).concat("<span style=\"background-color:#000000;\"><font color=" + background + ">").concat("0").concat("</font></span>").concat(origiLine.substring(meX + 1))
         ));
     }
 
@@ -105,7 +109,48 @@ public class MainActivity extends AppCompatActivity {
 
     private void setMeInPosition() {}
     private void eraseBehindBe() {}
-    private void checkAvailableMoves() {}
+    private void checkAvailableMoves() {
+        // me: [rows][columns];
+        // me:  map[meY][meX];
+        boolean leftDirectionIsAvailable = false;
+        boolean rightDirectionIsAvailable = false;
+        boolean upDirectionIsAvailable = false;
+        boolean downDirectionIsAvailable = false;
+        int leftSteps = -1; // character is in the first column, has no number on the left side
+        if (meX > 0) {
+            leftSteps = map[meY][meX-1];
+            if (meX >= leftSteps) {
+                leftDirectionIsAvailable = true;
+            }
+        }
+        int rightSteps = -1; // character is in the last column, has no number on the right side
+        if (meX < columns-1) {
+            rightSteps = map[meY][meX+1];
+            if (meX + rightSteps < columns) {
+                rightDirectionIsAvailable = true;
+            }
+        }
+        int upSteps = -1; // character is in the first row, has no number on the upper side
+        if (meY > 0) {
+            upSteps = map[meY-1][meX];
+            if (meY - upSteps >= 0) {
+                upDirectionIsAvailable = true;
+            }
+        }
+        int downSteps = -1; // character is in the last row, has no number on the down side
+        if (meY < rows-1) {
+            downSteps = map[meY+1][meX];
+            if (meY + downSteps < rows) {
+                downDirectionIsAvailable = true;
+            }
+        }
+        String directionsSummary = "leftDirectionIsAvailable: " + leftDirectionIsAvailable + ", steps: " + leftSteps + "\n" +
+                "rightDirectionIsAvailable: " + rightDirectionIsAvailable + ", steps: " + rightSteps + "\n" +
+                "upDirectionIsAvailable: " + upDirectionIsAvailable + ", steps: " + upSteps + "\n" +
+                "downDirectionIsAvailable: " + downDirectionIsAvailable + ", steps: " + downSteps + "\n";
+        System.out.println(directionsSummary);
+        up_available.setText(directionsSummary);
+    }
     private void go(String destination, int distance) {}
 
 }
