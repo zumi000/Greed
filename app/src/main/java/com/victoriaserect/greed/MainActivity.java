@@ -6,42 +6,97 @@ import android.os.Bundle;
 import android.text.Html;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
+    //numbers to fill up the map
     final int min = 1;
     final int max = 9;
-    final int columns = 45;
+
+    //map size
+    final int columns = 44; //max 44
     final int rows = 10;
+
+    //the map
     private int[][] map;
+
+    //character's position
     private int meX;
     private int meY;
+
+    //scoring
+    private int blocksEaten;
+    private double result;
+
+    //available directions to move from the current position
+    int leftSteps = -1;
+    int rightSteps = -1;
+    int upSteps = -1;
+    int downSteps = -1;
+    boolean leftDirectionIsAvailable;
+    boolean rightDirectionIsAvailable;
+    boolean upDirectionIsAvailable;
+    boolean downDirectionIsAvailable;
+
+    //some android sh!ts
     final String background = "#998BC3";
     List<TextView> textViews = new ArrayList<>();
-    TextView me, up_available;
+    TextView gameover, score;
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        me = (TextView) findViewById(R.id.text_me);
-        up_available = (TextView) findViewById(R.id.up_available);
+
         Button newMap = (Button) findViewById(R.id.btn_newmap);
+        progressBar = (ProgressBar) findViewById(R.id.simpleProgressBar);
+        score = (TextView) findViewById(R.id.result);
+        gameover = (TextView) findViewById(R.id.gameover);
+        Button up = (Button) findViewById(R.id.button_up_arrow);
+        Button down = (Button) findViewById(R.id.button_down_arrow);
+        Button left = (Button) findViewById(R.id.button_left_arrow);
+        Button right = (Button) findViewById(R.id.button_right_arrow);
         newMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createMap();
-                randomMe();
-                //printMap();
-                checkAvailableMoves();
-
+                newGame();
             }
         });
 
+        up.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goUp();
+            }
+        });
+
+        down.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goDown();
+            }
+        });
+
+        left.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goLeft();
+            }
+        });
+
+        right.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goRight();
+            }
+        });
 
         TextView line_01 = (TextView) findViewById(R.id.text_line_01);
         TextView line_02 = (TextView) findViewById(R.id.text_line_02);
@@ -65,92 +120,181 @@ public class MainActivity extends AppCompatActivity {
         textViews.add(line_09);
         textViews.add(line_10);
 
-        createMap();
-        randomMe();
-//printMap();
-        checkAvailableMoves();
+        newGame();
     }
 
 
-    private void createMap() {
+    private void newGame() {
+        blocksEaten = 0;
+        createNewRandomMatrixMap();
+        randomMe();
+        newPosition(1);
+    }
+
+    private void newPosition(int steps) {
+        blocksEaten += steps;
+        checkAvailableMoves();
+        generateAndroidView();
+        progressBar.setProgress((int)(Math.round(result)));
+
+    }
+
+    private void goUp(){
+        if (upDirectionIsAvailable) {
+            for (int i = 0; i < upSteps; i++) {
+                map[meY-i][meX]=-1;
+            }
+            meY = meY-upSteps;
+            newPosition(upSteps);
+        }
+    }
+
+    private void goDown(){
+        if (downDirectionIsAvailable) {
+            for (int i = 0; i < downSteps; i++) {
+                map[meY+i][meX]=-1;
+            }
+            meY = meY+downSteps;
+            newPosition(downSteps);
+        }
+    }
+
+    private void goLeft(){
+        if (leftDirectionIsAvailable) {
+            for (int i = 0; i < leftSteps; i++) {
+                map[meY][meX-i]=-1;
+            }
+            meX= meX-leftSteps;
+            newPosition(leftSteps);
+        }
+    }
+
+    private void goRight(){
+        if (rightDirectionIsAvailable) {
+            for (int i = 0; i < rightSteps; i++) {
+                map[meY][meX+i]=-1;
+            }
+            meX = meX+rightSteps;
+            newPosition(rightSteps);
+        }
+    }
+
+    private void createNewRandomMatrixMap() {
+        gameover.setVisibility(View.INVISIBLE);
         map = new int[rows][columns];
-        System.out.println("CREATING MAP AND MATRIX:");
         for (int i = 0; i < rows; i++) {
-            String line = "";
             for (int j = 0; j < columns; j++) {
                 map[i][j] = new Random().nextInt((max - min) + 1) + min;
-                line += String.valueOf(map[i][j]);
             }
-            textViews.get(i).setText(line);
         }
     }
 
     private void randomMe() {
         meX = new Random().nextInt((columns-1) + 1);
         meY = new Random().nextInt((rows-1) + 1);
-        me.setText("My position: " + meX + "; " + meY);
         map[meY][meX] = 0;
-        String origiLine = textViews.get(meY).getText().toString();
-        textViews.get(meY).setText(Html.fromHtml(
-                origiLine.substring(0, meX).concat("<span style=\"background-color:#000000;\"><font color=" + background + ">").concat("0").concat("</font></span>").concat(origiLine.substring(meX + 1))
-        ));
     }
 
-    private void printMap () {
-        System.out.println("PRINT MAP FROM MATRIX:");
+    private void generateAndroidView() {
+        updateTexts();
         for (int i = 0; i < map.length; i++) {
             String line = "";
             for (int j = 0; j < map[i].length; j++) {
-                line += String.valueOf(map[i][j]);
+                if (meY == i && meX == j) {
+                    line += "<span style=\"background-color:#000000;\"><font color=" + background + ">".concat("0").concat("</font></span>");
+                } else if (map[i][j] == -1) {
+                    line += "<span style=\"background-color:#000000;\"><font color=#000000>".concat("0").concat("</font></span>");
+                }
+                else {
+                    line += String.valueOf(map[i][j]);
+                }
             }
-            System.out.println(line);
+            textViews.get(i).setText(Html.fromHtml(line));
         }
     }
 
-    private void setMeInPosition() {}
-    private void eraseBehindBe() {}
     private void checkAvailableMoves() {
         // me: [rows][columns];
         // me:  map[meY][meX];
-        boolean leftDirectionIsAvailable = false;
-        boolean rightDirectionIsAvailable = false;
-        boolean upDirectionIsAvailable = false;
-        boolean downDirectionIsAvailable = false;
-        int leftSteps = -1; // character is in the first column, has no number on the left side
-        if (meX > 0) {
-            leftSteps = map[meY][meX-1];
-            if (meX >= leftSteps) {
+        leftDirectionIsAvailable = false;
+        rightDirectionIsAvailable = false;
+        upDirectionIsAvailable = false;
+        downDirectionIsAvailable = false;
+
+        leftSteps = -1; // character is in the first column, has no number on the left side
+        if (meX > 0) { // character is NOT in the first column, has number on the left side
+            leftSteps = map[meY][meX-1]; // the number on the left side of the character will be the number of the steps
+            if (meX >= leftSteps && leftSteps != -1) {  // we must stay on the map after doing the steps,
+                                                        // and let the direction disabled, if the cell next to the character was already visited
                 leftDirectionIsAvailable = true;
+                for (int i = 1; i <= leftSteps; i++) {  // collision-check:
+                    if (map[meY][meX-i] == -1) {        // if we do all the steps,
+                        leftDirectionIsAvailable = false;   // every step must be on an unvisited cell!
+                    }
+                }
             }
         }
-        int rightSteps = -1; // character is in the last column, has no number on the right side
+
+        rightSteps = -1; // character is in the last column, has no number on the right side
         if (meX < columns-1) {
             rightSteps = map[meY][meX+1];
-            if (meX + rightSteps < columns) {
+            if (meX + rightSteps < columns && rightSteps != -1) {
                 rightDirectionIsAvailable = true;
+                for (int i = 1; i <= rightSteps; i++) {
+                    if (map[meY][meX+i] == -1) {
+                        rightDirectionIsAvailable = false;
+                    }
+                }
             }
         }
-        int upSteps = -1; // character is in the first row, has no number on the upper side
+
+        upSteps = -1; // character is in the first row, has no number on the upper side
         if (meY > 0) {
             upSteps = map[meY-1][meX];
-            if (meY - upSteps >= 0) {
+            if (meY - upSteps >= 0 && upSteps != -1) {
                 upDirectionIsAvailable = true;
+                for (int i = 1; i <= upSteps; i++) {
+                    if (map[meY-i][meX] == -1) {
+                        upDirectionIsAvailable = false;
+                    }
+                }
             }
         }
-        int downSteps = -1; // character is in the last row, has no number on the down side
+
+        downSteps = -1; // character is in the last row, has no number on the down side
         if (meY < rows-1) {
             downSteps = map[meY+1][meX];
-            if (meY + downSteps < rows) {
+            if (meY + downSteps < rows && downSteps != -1) {
                 downDirectionIsAvailable = true;
+                for (int i = 1; i <= downSteps; i++) {
+                    if (map[meY+i][meX] == -1) {
+                        downDirectionIsAvailable = false;
+                    }
+                }
             }
         }
+
+        if (!leftDirectionIsAvailable && !rightDirectionIsAvailable && !upDirectionIsAvailable && !downDirectionIsAvailable) {
+            gameover.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void updateTexts() {
+
+        //me.setText("My position: " + meX + "; " + meY);
+
+
         String directionsSummary = "leftDirectionIsAvailable: " + leftDirectionIsAvailable + ", steps: " + leftSteps + "\n" +
                 "rightDirectionIsAvailable: " + rightDirectionIsAvailable + ", steps: " + rightSteps + "\n" +
                 "upDirectionIsAvailable: " + upDirectionIsAvailable + ", steps: " + upSteps + "\n" +
                 "downDirectionIsAvailable: " + downDirectionIsAvailable + ", steps: " + downSteps + "\n";
-        System.out.println(directionsSummary);
-        up_available.setText(directionsSummary);
+        //up_available.setText(directionsSummary);
+
+        result = ((double)blocksEaten * 100) / ((double)rows * (double)columns);
+        String scoreFormatted = new DecimalFormat("#.##").format(result);
+        String scoreSummary = "Result: " + scoreFormatted + "% | " + blocksEaten + "/" + rows*columns + " eaten";
+        score.setText(scoreSummary);
+
     }
-    private void go(String destination, int distance) {}
 
 }
