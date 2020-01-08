@@ -5,10 +5,10 @@ android {
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.victoriaserect.greed"
-        minSdkVersion 19
+        minSdkVersion 16 // 19
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0"
+        versionName "1.01"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

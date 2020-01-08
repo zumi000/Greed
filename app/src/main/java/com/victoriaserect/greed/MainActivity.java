@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
     final int max = 9;
 
     //map size
-    final int columns = 44; //max 44
+    final int columns = 40; //max 44
     final int rows = 10;
 
     //the map
@@ -214,8 +214,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkAvailableMoves() {
-        // me: [rows][columns];
-        // me:  map[meY][meX];
         leftDirectionIsAvailable = false;
         rightDirectionIsAvailable = false;
         upDirectionIsAvailable = false;
@@ -280,21 +278,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateTexts() {
-
-        //me.setText("My position: " + meX + "; " + meY);
-
-
-        String directionsSummary = "leftDirectionIsAvailable: " + leftDirectionIsAvailable + ", steps: " + leftSteps + "\n" +
-                "rightDirectionIsAvailable: " + rightDirectionIsAvailable + ", steps: " + rightSteps + "\n" +
-                "upDirectionIsAvailable: " + upDirectionIsAvailable + ", steps: " + upSteps + "\n" +
-                "downDirectionIsAvailable: " + downDirectionIsAvailable + ", steps: " + downSteps + "\n";
-        //up_available.setText(directionsSummary);
-
         result = ((double)blocksEaten * 100) / ((double)rows * (double)columns);
         String scoreFormatted = new DecimalFormat("#.##").format(result);
         String scoreSummary = "Result: " + scoreFormatted + "% | " + blocksEaten + "/" + rows*columns + " eaten";
         score.setText(scoreSummary);
-
     }
 
 }
