@@ -7,8 +7,8 @@ android {
         applicationId "com.victoriaserect.greed"
         minSdkVersion 16 // 19
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.01"
+        versionCode 3
+        versionName "1.03"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

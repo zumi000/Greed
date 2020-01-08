@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -45,15 +47,19 @@ public class MainActivity extends AppCompatActivity {
     boolean downDirectionIsAvailable;
 
     //some android sh!ts
-    final String background = "#998BC3";
+    final String background = "#FFFFFF";
     List<TextView> textViews = new ArrayList<>();
     TextView gameover, score;
     ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().hide();
 
         Button newMap = (Button) findViewById(R.id.btn_newmap);
         progressBar = (ProgressBar) findViewById(R.id.simpleProgressBar);
